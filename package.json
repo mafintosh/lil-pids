@@ -1,6 +1,6 @@
 {
   "name": "lil-pid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dead simple process manager with few features",
   "main": "index.js",
   "dependencies": {
