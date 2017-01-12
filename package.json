@@ -1,0 +1,28 @@
+{
+  "name": "lil-pid",
+  "version": "0.0.0",
+  "description": "Dead simple process manager with few features",
+  "main": "index.js",
+  "dependencies": {
+    "respawn": "^2.4.1"
+  },
+  "devDependencies": {
+    "standard": "^8.6.0"
+  },
+  "bin": {
+    "lil-pid": "./index.js"
+  },
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mafintosh/lil-pid.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafintosh/lil-pid/issues"
+  },
+  "homepage": "https://github.com/mafintosh/lil-pid"
+}
