@@ -21,7 +21,7 @@ function create (filename) {
   var active = []
   var spawned = {}
 
-  fs.watchFile(filename, update)
+  fs.watch(filename, update)
   update()
 
   function update () {
