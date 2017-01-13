@@ -6,6 +6,8 @@ Dead simple process manager with few features
 npm install -g lil-pids
 ```
 
+![omg](https://media.giphy.com/media/Aff4ryYiacUO4/giphy.gif)
+
 First create a file with the commands you wanna have running
 
 ```
