@@ -16,72 +16,68 @@ if (!fs.existsSync(filename)) {
 }
 
 var padding = ['', ' ', '  ', '   ', '    ']
-var active = []
+var services = []
 var spawned = {}
 
 fs.watch(filename, update)
 update()
 
 function update () {
-  read(function (err, lines) {
+  read(function (err, latest) {
     if (err) throw err
 
-    var newOnes = []
-    var oldOnes = []
+    var added = []
+    var removed = []
 
-    active.forEach(function (line) {
-      if (lines.indexOf(line) > -1) return
-      oldOnes.push(line)
+    services.forEach(function (s) {
+      if (latest.indexOf(s) === -1) stop(s)
+    })
+    latest.forEach(function (s) {
+      if (services.indexOf(s) === -1) start(s)
     })
 
-    lines.forEach(function (line) {
-      // check if already active
-      if (active.indexOf(line) > -1) return
-      newOnes.push(line)
-    })
-
-    active = lines
-
-    oldOnes.forEach(function (cmd) {
-      spawned[cmd].stop()
-      delete spawned[cmd]
-    })
-
-    newOnes.forEach(function (cmd) {
-      var m = spawned[cmd] = respawn(['sh', '-c', cmd], {
-        maxRestarts: Infinity
-      })
-
-      m.on('spawn', onspawn)
-      m.on('exit', onexit)
-      m.on('stdout', onstdout)
-      m.on('stderr', onstderr)
-
-      m.start()
-
-      function onstdout (message) {
-        onlog('(out)', message)
-      }
-
-      function onstderr (message) {
-        onlog('(err)', message)
-      }
-
-      function onspawn () {
-        console.log(prefix(m.pid) + '!!!!! SPAWN ' + cmd)
-      }
-
-      function onexit (code) {
-        console.log(prefix(m.pid) + '!!!!! EXIT(' + code + ') ' + cmd)
-      }
-
-      function onlog (type, message) {
-        var ln = message.toString().split('\n')
-        for (var i = 0; i < ln.length; i++) ln[i] = prefix(m.pid) + type + ' ' + ln[i]
-        console.log(ln.join('\n'))
-      }
-    })
+    services = latest
   })
+}
+
+function stop (cmd) {
+  spawned[cmd].stop()
+  delete spawned[cmd]
+}
+
+function start (cmd) {
+  var m = spawned[cmd] = respawn(['sh', '-c', cmd], {
+    maxRestarts: Infinity
+  })
+
+  m.on('spawn', onspawn)
+  m.on('exit', onexit)
+  m.on('stdout', onstdout)
+  m.on('stderr', onstderr)
+
+  m.start()
+
+  function onstdout (message) {
+    onlog('(out)', message)
+  }
+
+  function onstderr (message) {
+    onlog('(err)', message)
+  }
+
+  function onspawn () {
+    console.log(prefix(m.pid) + '!!!!! SPAWN ' + cmd)
+  }
+
+  function onexit (code) {
+    console.log(prefix(m.pid) + '!!!!! EXIT(' + code + ') ' + cmd)
+  }
+
+  function onlog (type, message) {
+    var ln = message.toString().split('\n')
+    for (var i = 0; i < ln.length; i++) ln[i] = prefix(m.pid) + type + ' ' + ln[i]
+    console.log(ln.join('\n'))
+  }
 }
 
 function read (cb) {
