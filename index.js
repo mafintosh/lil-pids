@@ -6,7 +6,7 @@ var respawn = require('respawn')
 var filename = process.argv[2]
 
 if (!filename) {
-  console.error('Usage: lil-pid [services-file]')
+  console.error('Usage: lil-pids [services-file]')
   process.exit(1)
 }
 
@@ -15,93 +15,93 @@ if (!fs.existsSync(filename)) {
   process.exit(2)
 }
 
-create(filename)
+var padding = ['', ' ', '  ', '   ', '    ']
+var active = []
+var spawned = {}
 
-function create (filename) {
-  var active = []
-  var spawned = {}
+fs.watch(filename, update)
+update()
 
-  fs.watch(filename, update)
-  update()
+function update () {
+  read(function (err, lines) {
+    if (err) throw err
 
-  function update () {
-    read(function (err, lines) {
-      if (err) throw err
+    var newOnes = []
+    var oldOnes = []
 
-      var newOnes = []
-      var oldOnes = []
-
-      active.forEach(function (line) {
-        if (lines.indexOf(line) > -1) return
-        oldOnes.push(line)
-      })
-
-      lines.forEach(function (line) {
-        // check if already active
-        if (active.indexOf(line) > -1) return
-        newOnes.push(line)
-      })
-
-      active = lines
-
-      oldOnes.forEach(function (cmd) {
-        spawned[cmd].stop()
-        delete spawned[cmd]
-      })
-
-      newOnes.forEach(function (cmd) {
-        var m = spawned[cmd] = respawn(['sh', '-c', cmd], {
-          maxRestarts: Infinity
-        })
-
-        var prefix = ''
-
-        m.on('spawn', onspawn)
-        m.on('exit', onexit)
-        m.on('stdout', onlog)
-        m.on('stderr', onlog)
-
-        m.start()
-
-        function onspawn () {
-          updatePrefix()
-          console.log('%s Spawning "%s"', prefix, cmd)
-        }
-
-        function onexit (code) {
-          console.log('%s Command "%s" exited with %d', prefix, cmd, code)
-        }
-
-        function onlog (message) {
-          var ln = message.toString().split('\n')
-          for (var i = 0; i < ln.length; i++) ln[i] = prefix + ' ' + ln[i]
-          console.log(ln.join('\n'))
-        }
-
-        function updatePrefix () {
-          var pid = '' + m.pid
-          while (pid.length < 5) pid = ' ' + pid
-          prefix = '[' + pid + ']'
-        }
-      })
+    active.forEach(function (line) {
+      if (lines.indexOf(line) > -1) return
+      oldOnes.push(line)
     })
-  }
 
-  function read (cb) {
-    fs.readFile(filename, 'utf-8', function (err, source) {
-      if (err && err.code === 'ENOENT') return cb(null, [])
-      if (err) return cb(err)
-
-      var lines = source.trim().split('\n')
-        .map(function (line) {
-          return line.trim()
-        })
-        .filter(function (line) {
-          return line && line[0] !== '#'
-        })
-
-      cb(null, lines)
+    lines.forEach(function (line) {
+      // check if already active
+      if (active.indexOf(line) > -1) return
+      newOnes.push(line)
     })
-  }
+
+    active = lines
+
+    oldOnes.forEach(function (cmd) {
+      spawned[cmd].stop()
+      delete spawned[cmd]
+    })
+
+    newOnes.forEach(function (cmd) {
+      var m = spawned[cmd] = respawn(['sh', '-c', cmd], {
+        maxRestarts: Infinity
+      })
+
+      m.on('spawn', onspawn)
+      m.on('exit', onexit)
+      m.on('stdout', onstdout)
+      m.on('stderr', onstderr)
+
+      m.start()
+
+      function onstdout (message) {
+        onlog('(out)', message)
+      }
+
+      function onstderr (message) {
+        onlog('(err)', message)
+      }
+
+      function onspawn () {
+        console.log(prefix(m.pid) + '!!!!! SPAWN ' + cmd)
+      }
+
+      function onexit (code) {
+        console.log(prefix(m.pid) + '!!!!! EXIT(' + code + ') ' + cmd)
+      }
+
+      function onlog (type, message) {
+        var ln = message.toString().split('\n')
+        for (var i = 0; i < ln.length; i++) ln[i] = prefix(m.pid) + type + ' ' + ln[i]
+        console.log(ln.join('\n'))
+      }
+    })
+  })
 }
 
+function read (cb) {
+  fs.readFile(filename, 'utf-8', function (err, source) {
+    if (err && err.code === 'ENOENT') return cb(null, [])
+    if (err) return cb(err)
+
+    var lines = source.trim().split('\n')
+      .map(function (line) {
+        return line.trim()
+      })
+      .filter(function (line) {
+        return line && line[0] !== '#'
+      })
+
+    cb(null, lines)
+  })
+}
+
+function prefix (pid) {
+  var spid = pid.toString()
+  return spid + padding[5 - spid.length] + ': '
+}
