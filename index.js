@@ -3,8 +3,11 @@
 var fs = require('fs')
 var respawn = require('respawn')
 
+var BIN_SH = process.platform === 'android' ? '/system/bin/sh' : '/bin/sh'
+var CMD_EXE = process.env.comspec || 'cmd.exe'
+
 var servicesFile = process.argv[2]
-var statusFile = process.argv[3]
+var pidsFile = process.argv[3]
 
 if (!servicesFile) {
   console.error('Usage: lil-pids [services-file] [pids-file?]')
@@ -24,13 +27,15 @@ fs.watch(servicesFile, update)
 update()
 
 function writePids (cb) {
+  if (!pidsFile) return
+
   var cmds = Object.keys(monitors)
   var lines = cmds.map(function (cmd) {
     if (!monitors[cmd].pid) return
     return prefix(monitors[cmd].pid) + cmd + '\n'
   })
 
-  fs.writeFile(statusFile, lines.join(''), cb)
+  fs.writeFile(pidsFile, lines.join(''), cb)
 }
 
 function update () {
@@ -56,9 +61,7 @@ function stop (cmd) {
 }
 
 function start (cmd) {
-  var m = monitors[cmd] = respawn(['sh', '-c', cmd], {
-    maxRestarts: Infinity
-  })
+  var m = monitors[cmd] = spawn(cmd)
 
   m.on('spawn', onspawn)
   m.on('exit', onexit)
@@ -112,4 +115,9 @@ function read (cb) {
 function prefix (pid) {
   var spid = pid.toString()
   return spid + padding[5 - spid.length] + ': '
+}
+
+function spawn (cmd) {
+  if (process.platform !== 'win32') return respawn([BIN_SH, '-c', cmd], {maxRestarts: Infinity})
+  return respawn([CMD_EXE, '/d', '/s', '/c', '"' + command + '"'], {maxRestarts: Infinity, windowsVerbatimArguments: true})
 }
