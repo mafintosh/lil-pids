@@ -30,6 +30,14 @@ lil-pids will forward all stdout, stderr to its own stdout, stderr prefixed with
 It will also tell you when a command has been spawned, exited and finally it will restart processes
 when the crash/end.
 
+lil-pids can also write the pids of the current running processes to a file. Just pass the pids filename as the 2nd argument
+
+```
+lil-pids ./services ./pids
+```
+
+Then you can simply `cat ./pids` to see what is running at the moment.
+
 That's it!
 
 ## Pro-tip

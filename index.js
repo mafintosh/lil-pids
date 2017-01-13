@@ -3,24 +3,35 @@
 var fs = require('fs')
 var respawn = require('respawn')
 
-var filename = process.argv[2]
+var servicesFile = process.argv[2]
+var statusFile = process.argv[3]
 
-if (!filename) {
-  console.error('Usage: lil-pids [services-file]')
+if (!servicesFile) {
+  console.error('Usage: lil-pids [services-file] [pids-file?]')
   process.exit(1)
 }
 
-if (!fs.existsSync(filename)) {
-  console.error(filename + ' does not exist')
+if (!fs.existsSync(servicesFile)) {
+  console.error(servicesFile + ' does not exist')
   process.exit(2)
 }
 
 var padding = ['', ' ', '  ', '   ', '    ']
 var services = []
-var spawned = {}
+var monitors = {}
 
-fs.watch(filename, update)
+fs.watch(servicesFile, update)
 update()
+
+function writePids (cb) {
+  var cmds = Object.keys(monitors)
+  var lines = cmds.map(function (cmd) {
+    if (!monitors[cmd].pid) return
+    return prefix(monitors[cmd].pid) + cmd + '\n'
+  })
+
+  fs.writeFile(statusFile, lines.join(''), cb)
+}
 
 function update () {
   read(function (err, latest) {
@@ -37,16 +48,18 @@ function update () {
     })
 
     services = latest
+
+    writePids()
   })
 }
 
 function stop (cmd) {
-  spawned[cmd].stop()
-  delete spawned[cmd]
+  monitors[cmd].stop()
+  delete monitors[cmd]
 }
 
 function start (cmd) {
-  var m = spawned[cmd] = respawn(['sh', '-c', cmd], {
+  var m = monitors[cmd] = respawn(['sh', '-c', cmd], {
     maxRestarts: Infinity
   })
 
@@ -67,10 +80,12 @@ function start (cmd) {
 
   function onspawn () {
     console.log(prefix(m.pid) + '!!!!! SPAWN ' + cmd)
+    writePids()
   }
 
   function onexit (code) {
     console.log(prefix(m.pid) + '!!!!! EXIT(' + code + ') ' + cmd)
+    writePids()
   }
 
   function onlog (type, message) {
@@ -81,7 +96,7 @@ function start (cmd) {
 }
 
 function read (cb) {
-  fs.readFile(filename, 'utf-8', function (err, source) {
+  fs.readFile(servicesFile, 'utf-8', function (err, source) {
     if (err && err.code === 'ENOENT') return cb(null, [])
     if (err) return cb(err)
 
