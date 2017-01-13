@@ -19,6 +19,7 @@ var services = []
 var monitors = {}
 
 fs.watch(servicesFile, update)
+fs.watchFile(servicesFile, update) // watch seems buggy on linux
 update()
 
 function writePids (cb) {
@@ -45,8 +46,6 @@ function update () {
     })
 
     services = latest
-
-    writePids()
   })
 }
 
