@@ -14,11 +14,6 @@ if (!servicesFile) {
   process.exit(1)
 }
 
-if (!fs.existsSync(servicesFile)) {
-  console.error(servicesFile + ' does not exist')
-  process.exit(2)
-}
-
 var padding = ['', ' ', '  ', '   ', '    ']
 var services = []
 var monitors = {}
