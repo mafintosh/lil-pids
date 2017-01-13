@@ -25,7 +25,8 @@ no longer referenced from the file will be shutdown and any new ones will be spa
 
 lil-pids will forward all stdout, stderr to its own stdout, stderr prefixed with the process id.
 
-It will also tell you when a command has been spawned, exited.
+It will also tell you when a command has been spawned, exited and finally it will restart processes
+when the crash/end.
 
 That's it!
 
