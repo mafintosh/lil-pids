@@ -119,5 +119,5 @@ function prefix (pid) {
 
 function spawn (cmd) {
   if (process.platform !== 'win32') return respawn([BIN_SH, '-c', cmd], {maxRestarts: Infinity})
-  return respawn([CMD_EXE, '/d', '/s', '/c', '"' + command + '"'], {maxRestarts: Infinity, windowsVerbatimArguments: true})
+  return respawn([CMD_EXE, '/d', '/s', '/c', '"' + cmd + '"'], {maxRestarts: Infinity, windowsVerbatimArguments: true})
 }
