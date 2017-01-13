@@ -40,10 +40,15 @@ Then you can simply `cat ./pids` to see what is running at the moment.
 
 That's it!
 
-## Pro-tip
+## Pro-tips
 
-Spawn lil-pids /home/username/services with your OS' service monitor. Then it'll startup at boot
-and every thing you'll need to do is edit the services file
+* Spawn `lil-pids ./services ./pids` with your OS' service monitor. Then it'll startup at boot and every thing you need to do is edit the services file.
+
+* Add `> output.log and 2> errors.log` to the end of a command to persist logs to files.
+
+* Cat the pids file and use `kill` to restart a running process. Use `ps` / `top` to check how something is running.
+
+* Add `#` in front of a service to disable it temporarily.
 
 ## License
 
