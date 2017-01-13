@@ -37,9 +37,6 @@ function update () {
   read(function (err, latest) {
     if (err) throw err
 
-    var added = []
-    var removed = []
-
     services.forEach(function (s) {
       if (latest.indexOf(s) === -1) stop(s)
     })
