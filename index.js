@@ -43,7 +43,7 @@ function update () {
   read(function (err, latest) {
     if (err) throw err
 
-    var prev = latest
+    var prev = services
     services = latest
 
     prev.forEach(function (s) {
