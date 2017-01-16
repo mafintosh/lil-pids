@@ -18,9 +18,7 @@ var padding = ['', ' ', '  ', '   ', '    ']
 var services = []
 var monitors = {}
 
-fs.watch(servicesFile, update)
-fs.watchFile(servicesFile, update) // watch seems buggy on linux
-update()
+watch(servicesFile, update)
 
 function writePids (cb) {
   if (!pidsFile) return
@@ -114,4 +112,25 @@ function prefix (pid) {
 function spawn (cmd) {
   if (process.platform !== 'win32') return respawn([BIN_SH, '-c', cmd], {maxRestarts: Infinity})
   return respawn([CMD_EXE, '/d', '/s', '/c', '"' + cmd + '"'], {maxRestarts: Infinity, windowsVerbatimArguments: true})
+}
+
+function watch (name, notify) { // watch a filename, not an inode (module?)
+  var watcher = null
+  var checks = 0
+  var intervals = [100, 500, 1000]
+
+  check()
+
+  function check () {
+    if (watcher) watcher.close()
+    watcher = null
+
+    fs.stat(name, function (err) {
+      if (err) return setTimeout(check, intervals[checks++] || 1000)
+
+      checks = 0
+      notify()
+      watcher = fs.watch(name, check)
+    })
+  }
 }
