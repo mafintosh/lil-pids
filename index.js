@@ -43,14 +43,15 @@ function update () {
   read(function (err, latest) {
     if (err) throw err
 
-    services.forEach(function (s) {
+    var prev = latest
+    services = latest
+
+    prev.forEach(function (s) {
       if (latest.indexOf(s) === -1) stop(s)
     })
     latest.forEach(function (s) {
-      if (services.indexOf(s) === -1) start(s)
+      if (prev.indexOf(s) === -1) start(s)
     })
-
-    services = latest
   })
 }
 
@@ -66,6 +67,7 @@ function start (cmd) {
   m.on('exit', onexit)
   m.on('stdout', onstdout)
   m.on('stderr', onstderr)
+  m.on('stop', update)
 
   m.start()
 
@@ -91,6 +93,10 @@ function start (cmd) {
     var ln = message.toString().split('\n')
     for (var i = 0; i < ln.length; i++) ln[i] = prefix(m.pid) + type + ' ' + ln[i]
     console.log(ln.join('\n'))
+  }
+
+  function update () {
+    writePids()
   }
 }
 
