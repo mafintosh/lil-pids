@@ -25,7 +25,12 @@ watch(servicesFile, update)
 function writePids (cb) {
   if (!pidsFile) return
 
-  var cmds = Object.keys(monitors)
+  var cmds = Object.keys(monitors).sort(function (a, b) {
+    var i = services.indexOf(a)
+    var j = services.indexOf(b)
+    return (i === -1 || j === -1) ? a.localeCompare(b) : i - j
+  })
+
   var lines = cmds.map(function (cmd) {
     if (!monitors[cmd].pid) return
     return prefix(monitors[cmd].pid) + cmd + '\n'
