@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+process.title = 'lil-pids'
+
 var fs = require('fs')
 var respawn = require('respawn')
 
