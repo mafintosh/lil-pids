@@ -50,6 +50,16 @@ That's it!
 
 * Add `#` in front of a service to disable it temporarily.
 
+## Start on server boot
+
+To start lil-pids on server boot (or restart it when it crashes) you can add it using systemd.
+
+```
+npm install -g add-to-systemd
+add-to-systemd lil-pids /usr/local/bin/lil-pids ~/services ~/pids
+systemctl start lil-pids
+```
+
 ## License
 
 MIT
