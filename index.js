@@ -4,9 +4,13 @@ process.title = 'lil-pids'
 
 var fs = require('fs')
 var respawn = require('respawn')
+var chalk = require('chalk')
 
 var BIN_SH = process.platform === 'android' ? '/system/bin/sh' : '/bin/sh'
 var CMD_EXE = process.env.comspec || 'cmd.exe'
+
+var colors = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'gray']
+var currentColor = 0
 
 var servicesFile = process.argv[2]
 var pidsFile = process.argv[3]
@@ -62,6 +66,7 @@ function stop (cmd) {
 
 function start (cmd) {
   var m = monitors[cmd] = spawn(cmd)
+  var color = chalk[nextColor()]
 
   m.on('spawn', onspawn)
   m.on('exit', onexit)
@@ -80,19 +85,22 @@ function start (cmd) {
   }
 
   function onspawn () {
-    console.log(prefix(m.pid) + '!!!!! SPAWN ' + cmd)
+    console.log(color(prefix(m.pid) + '!!!!! SPAWN ' + cmd))
     writePids()
   }
 
   function onexit (code) {
-    console.log(prefix(m.pid) + '!!!!! EXIT(' + code + ') ' + cmd)
+    console.log(color(prefix(m.pid) + '!!!!! EXIT(' + code + ') ' + cmd))
     writePids()
   }
 
   function onlog (type, message) {
     var ln = message.toString().split('\n')
+    if (ln[ln.length - 1] === '') {
+      ln.splice(ln.length - 1, 1)
+    }
     for (var i = 0; i < ln.length; i++) ln[i] = prefix(m.pid) + type + ' ' + ln[i]
-    console.log(ln.join('\n'))
+    console.log(color(ln.join('\n')))
   }
 
   function update () {
@@ -146,4 +154,11 @@ function watch (name, notify) { // watch a filename, not an inode (module?)
       watcher = fs.watch(name, check)
     })
   }
+}
+
+function nextColor () {
+  if (currentColor === colors.length) {
+    currentColor = 0
+  }
+  return colors[currentColor++]
 }
