@@ -96,9 +96,7 @@ function start (cmd) {
 
   function onlog (type, message) {
     var ln = message.toString().split('\n')
-    if (ln[ln.length - 1] === '') {
-      ln.splice(ln.length - 1, 1)
-    }
+    if (ln[ln.length - 1] === '') ln.pop()
     for (var i = 0; i < ln.length; i++) ln[i] = prefix(m.pid) + type + ' ' + ln[i]
     console.log(color(ln.join('\n')))
   }
@@ -157,8 +155,6 @@ function watch (name, notify) { // watch a filename, not an inode (module?)
 }
 
 function nextColor () {
-  if (currentColor === colors.length) {
-    currentColor = 0
-  }
+  if (currentColor === colors.length) currentColor = 0
   return colors[currentColor++]
 }
