@@ -4,6 +4,7 @@
   "description": "Dead simple process manager with few features",
   "main": "index.js",
   "dependencies": {
+    "chalk": "^1.1.3",
     "respawn": "^2.4.1"
   },
   "devDependencies": {
