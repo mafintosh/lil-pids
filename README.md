@@ -56,8 +56,8 @@ To start lil-pids on server boot (or restart it when it crashes) you can add it 
 
 ```
 npm install -g add-to-systemd
-add-to-systemd lil-pids /usr/local/bin/lil-pids ~/services ~/pids
-systemctl start lil-pids
+sudo $(which add-to-systemd) -u $(whoami) -e PATH=$PATH lil-pids $(which lil-pids) ./services ./pids
+sudo systemctl start lil-pids
 ```
 
 ## License
