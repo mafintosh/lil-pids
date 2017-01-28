@@ -3,6 +3,7 @@
 process.title = 'lil-pids'
 
 var fs = require('fs')
+var readFile = require('read-file-live')
 var respawn = require('respawn')
 var chalk = require('chalk')
 
@@ -24,7 +25,7 @@ var padding = ['', ' ', '  ', '   ', '    ']
 var services = []
 var monitors = {}
 
-watch(servicesFile, update)
+readFile(servicesFile, update)
 
 function writePids (cb) {
   if (!pidsFile) return
@@ -43,19 +44,17 @@ function writePids (cb) {
   fs.writeFile(pidsFile, lines.join(''), cb)
 }
 
-function update () {
-  read(function (err, latest) {
-    if (err) throw err
+function update (buf) {
+  var latest = parse(buf)
+  var prev = services
 
-    var prev = services
-    services = latest
+  services = latest
 
-    prev.forEach(function (s) {
-      if (latest.indexOf(s) === -1) stop(s)
-    })
-    latest.forEach(function (s) {
-      if (prev.indexOf(s) === -1) start(s)
-    })
+  prev.forEach(function (s) {
+    if (latest.indexOf(s) === -1) stop(s)
+  })
+  latest.forEach(function (s) {
+    if (prev.indexOf(s) === -1) start(s)
   })
 }
 
@@ -106,21 +105,15 @@ function start (cmd) {
   }
 }
 
-function read (cb) {
-  fs.readFile(servicesFile, 'utf-8', function (err, source) {
-    if (err && err.code === 'ENOENT') return cb(null, [])
-    if (err) return cb(err)
-
-    var lines = source.trim().split('\n')
-      .map(function (line) {
-        return line.trim()
-      })
-      .filter(function (line) {
-        return line && line[0] !== '#'
-      })
-
-    cb(null, lines)
-  })
+function parse (buf) {
+  if (!buf) return []
+  return buf.toString().trim().split('\n')
+    .map(function (line) {
+      return line.trim()
+    })
+    .filter(function (line) {
+      return line && line[0] !== '#'
+    })
 }
 
 function prefix (pid) {
@@ -131,27 +124,6 @@ function prefix (pid) {
 function spawn (cmd) {
   if (process.platform !== 'win32') return respawn([BIN_SH, '-c', cmd], {maxRestarts: Infinity})
   return respawn([CMD_EXE, '/d', '/s', '/c', '"' + cmd + '"'], {maxRestarts: Infinity, windowsVerbatimArguments: true})
-}
-
-function watch (name, notify) { // watch a filename, not an inode (module?)
-  var watcher = null
-  var checks = 0
-  var intervals = [100, 500, 1000]
-
-  check()
-
-  function check () {
-    if (watcher) watcher.close()
-    watcher = null
-
-    fs.stat(name, function (err) {
-      if (err) return setTimeout(check, intervals[checks++] || 1000)
-
-      checks = 0
-      notify()
-      watcher = fs.watch(name, check)
-    })
-  }
 }
 
 function nextColor () {
