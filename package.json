@@ -6,7 +6,8 @@
   "dependencies": {
     "chalk": "^1.1.3",
     "read-file-live": "^1.0.1",
-    "respawn": "^2.4.1"
+    "respawn": "^2.4.1",
+    "shell-quote": "^1.6.1"
   },
   "devDependencies": {
     "standard": "^8.6.0"

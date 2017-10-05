@@ -6,6 +6,7 @@ var fs = require('fs')
 var readFile = require('read-file-live')
 var respawn = require('respawn')
 var chalk = require('chalk')
+var bashParse = require('shell-quote').parse
 
 var BIN_SH = process.platform === 'android' ? '/system/bin/sh' : '/bin/sh'
 var CMD_EXE = process.env.comspec || 'cmd.exe'
@@ -122,6 +123,8 @@ function prefix (pid) {
 }
 
 function spawn (cmd) {
+  var args = bashParse(cmd)
+  if (args.every(item => typeof item === 'string')) return respawn(args, {maxRestarts: Infinity})
   if (process.platform !== 'win32') return respawn([BIN_SH, '-c', cmd], {maxRestarts: Infinity})
   return respawn([CMD_EXE, '/d', '/s', '/c', '"' + cmd + '"'], {maxRestarts: Infinity, windowsVerbatimArguments: true})
 }
