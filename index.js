@@ -41,7 +41,7 @@ function writePids (cb) {
     return prefix(monitors[cmd].pid) + cmd + '\n'
   })
 
-  fs.writeFile(pidsFile, lines.join(''), cb)
+  fs.writeFile(pidsFile, lines.join(''), cb || noop)
 }
 
 function update (buf) {
@@ -130,3 +130,5 @@ function nextColor () {
   if (currentColor === colors.length) currentColor = 0
   return colors[currentColor++]
 }
+
+function noop () {}
